@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-from api.routes.get import router as test_router
-from api.routes.rtsp import router as rtsp_router
+from .checkv1 import router as test_router
 
 # Tạo router tổng
 router = APIRouter()
@@ -12,13 +11,7 @@ API_PREFIX = "/api/v1"
 router.include_router(
     test_router,
     prefix=f"{API_PREFIX}",
-    tags=["getFrame"]
-)
-
-router.include_router(
-    rtsp_router,
-    prefix=f"{API_PREFIX}/rtsp",
-    tags=["rtsp"]
+    tags=["checkv1"]
 )
 
 # Có thể thêm các routes khác ở đây
