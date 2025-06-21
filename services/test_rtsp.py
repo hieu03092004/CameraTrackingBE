@@ -23,15 +23,7 @@ def test_rtsp_frame():
     
     if frame is not None:
         print("✅ Lấy frame thành công!")
-        
-        # In thông tin frame
-        frame_info = rtsp_service.get_frame_info(frame)
-        print(f"📊 Thông tin frame:")
-        print(f"   - Kích thước: {frame_info['shape']}")
-        print(f"   - Kiểu dữ liệu: {frame_info['dtype']}")
-        print(f"   - Kích thước (bytes): {frame_info['size_bytes']}")
-        print(f"   - Số kênh màu: {frame_info['channels']}")
-        
+        print("Frame: ", frame) 
         # Lưu frame để xem
         output_path = "test_frame.jpg"
         cv2.imwrite(output_path, frame)
