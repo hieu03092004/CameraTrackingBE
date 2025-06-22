@@ -2,7 +2,6 @@ from fastapi import APIRouter, HTTPException
 from db.database import get_connection
 
 router = APIRouter()
-
 @router.get("/cameras")
 def get_cameras():
     conn = get_connection()

@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-from .checkv1 import router as test_router
 from .camera import router as camera_router
 
 # Tạo router tổng
@@ -7,13 +6,6 @@ router = APIRouter()
 
 # Định nghĩa prefix cho các routes
 API_PREFIX = "/api/v1"
-
-# Include các routes con
-router.include_router(
-    test_router,
-    prefix=f"{API_PREFIX}",
-    tags=["checkv1"]
-)
 
 router.include_router(
     camera_router,
