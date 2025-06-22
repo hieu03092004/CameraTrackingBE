@@ -1,9 +1,8 @@
-import cv2
+import cv2,zxingcpp
 import numpy as np
 from typing import Optional, Tuple, Dict, Any
 import logging
 import time
-
 # Cấu hình logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -69,6 +68,35 @@ class RTSPService:
             if self.cap is not None:
                 self.cap.release()
                 self.cap = None
+    def detect_qr_and_print(self,frame):
+    # Đọc barcode/QRCodes
+        results = zxingcpp.read_barcodes(frame)
+        for result in results:
+            if result.format != zxingcpp.BarcodeFormat.QRCode or not result.position:
+                continue
 
+            # Lấy 4 điểm góc và quy về integer
+            pts = [
+                (round(result.position.top_left.x),   round(result.position.top_left.y)),
+                (round(result.position.top_right.x),  round(result.position.top_right.y)),
+                (round(result.position.bottom_right.x), round(result.position.bottom_right.y)),
+                (round(result.position.bottom_left.x),  round(result.position.bottom_left.y))
+            ]
+
+            # Tính x_min, y_min, x_max, y_max
+            x_coords = [p[0] for p in pts]
+            y_coords = [p[1] for p in pts]
+            x_min, x_max = min(x_coords), max(x_coords)
+            y_min, y_max = min(y_coords), max(y_coords)
+
+            # Tính tâm (center)
+            center_x = (x_min + x_max) // 2
+            center_y = (y_min + y_max) // 2
+
+            # In ra kết quả
+            print(f"QR Text: {result.text}")
+            print(f"  Center: (x={center_x}, y={center_y})")
+            print(f"  ROI rect: x_min={x_min}, y_min={y_min}, x_max={x_max}, y_max={y_max}")
+            print("-" * 40)
 # Tạo instance global
 rtsp_service = RTSPService() 

@@ -4,7 +4,7 @@ from pymysql.cursors import DictCursor
 from dotenv import load_dotenv
 
 # Load file env thay vì .env
-load_dotenv('env')
+load_dotenv('.env')
 
 def get_connection():
     """Tạo connection đến database"""
