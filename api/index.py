@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 from .camera import router as camera_router
+from .schedule_time import router as schedule_time_router
+from .settlement_chart import router as settlement_chart_router
 
 # Tạo router tổng
 router = APIRouter()
@@ -13,15 +15,14 @@ router.include_router(
     tags=["camera"]
 )
 
-# Có thể thêm các routes khác ở đây
-# router.include_router(
-#     auth_router,
-#     prefix=f"{API_PREFIX}/auth",
-#     tags=["auth"]
-# )
+router.include_router(
+    schedule_time_router,
+    prefix=f"{API_PREFIX}",
+    tags=["schedule"]
+)
 
-# router.include_router(
-#     dashboard_router,
-#     prefix=f"{API_PREFIX}/dashboard",
-#     tags=["dashboard"]
-# )
+router.include_router(
+    settlement_chart_router,
+    prefix=f"{API_PREFIX}",
+    tags=["settlement-chart"]
+)
