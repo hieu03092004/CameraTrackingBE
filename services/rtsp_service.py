@@ -69,36 +69,6 @@ class RTSPService:
             if self.cap is not None:
                 self.cap.release()
                 self.cap = None
-    
-  
-    
-   
-
-        """
-        Lấy thống kê về frame
-        
-        Returns:
-            Dict[str, Any]: Thống kê frame
-        """
-        if self.current_frame is None:
-            return {"error": "Không có frame nào"}
-        
-        frame = self.current_frame
-        
-        # Tính toán thống kê
-        mean_values = np.mean(frame, axis=(0, 1))
-        std_values = np.std(frame, axis=(0, 1))
-        min_values = np.min(frame, axis=(0, 1))
-        max_values = np.max(frame, axis=(0, 1))
-        
-        return {
-            "mean": mean_values.tolist(),
-            "std": std_values.tolist(),
-            "min": min_values.tolist(),
-            "max": max_values.tolist(),
-            "timestamp": self.frame_timestamp,
-            "frame_count": self.frame_count
-        }
 
 # Tạo instance global
 rtsp_service = RTSPService() 
