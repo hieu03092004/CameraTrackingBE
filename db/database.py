@@ -15,7 +15,8 @@ def get_connection():
             password=os.getenv('MYSQL_PASSWORD', ''),
             database=os.getenv('DATABASE_NAME', 'camera_tracking_system'),
             port=int(os.getenv('MYSQL_PORT', '3306')),
-            cursorclass=DictCursor
+            cursorclass=DictCursor,
+            conv={**pymysql.converters.conversions, pymysql.FIELD_TYPE.TIME: str}
         )
         return conn
     except Exception as e:
