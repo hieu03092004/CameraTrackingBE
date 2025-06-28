@@ -1,10 +1,9 @@
 from pydantic import BaseModel
-from typing import Optional
 
 class CameraCreate(BaseModel):
     name: str
     rtsp_url: str
-    conversion_rate: Optional[float] = None
+    input_size_value: float
 
 class CameraOut(CameraCreate):
     camera_id: int

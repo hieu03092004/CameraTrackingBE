@@ -4,8 +4,6 @@ from contextlib import asynccontextmanager
 from task.task_services import camera_task_service
 from fastapi.middleware.cors import CORSMiddleware
 
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Khởi động các dịch vụ nền khi app bắt đầu
