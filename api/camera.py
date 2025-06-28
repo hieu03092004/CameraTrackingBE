@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from db.database import get_connection
+from services.rtsp_service import rtsp_service
 from schemas.camera_schema import CameraOut, CameraCreate
 import asyncio
 import subprocess
@@ -21,19 +22,25 @@ def get_cameras():
     finally:
         conn.close()
 
-@router.post("/cameras", response_model=CameraOut)
+@router.post("/cameras")
 def create_camera(camera: CameraCreate):
     conn = get_connection()
     if conn is None:
         raise HTTPException(status_code=500, detail="❌ Không kết nối được DB")
 
     try:
+        # Gọi hàm tính hệ số chuyển đổi
+        conversion_rate = rtsp_service.process_unit_conversion(camera.rtsp_url, camera.input_size_value)
+
+        if conversion_rate is None:
+            raise HTTPException(status_code=400, detail="Không tính được hệ số chuyển đổi từ RTSP.")
+
         with conn.cursor() as cursor:
             insert_query = """
                 INSERT INTO cameras (name, rtsp_url, conversion_rate)
                 VALUES (%s, %s, %s)
             """
-            cursor.execute(insert_query, (camera.name, camera.rtsp_url, camera.conversion_rate))
+            cursor.execute(insert_query, (camera.name, camera.rtsp_url, conversion_rate))
             conn.commit()
             camera_id = cursor.lastrowid
 
@@ -41,8 +48,10 @@ def create_camera(camera: CameraCreate):
                 "camera_id": camera_id,
                 "name": camera.name,
                 "rtsp_url": camera.rtsp_url,
-                "conversion_rate": camera.conversion_rate
+                "conversion_rate": conversion_rate
             }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi thêm camera: {e}")
     finally:

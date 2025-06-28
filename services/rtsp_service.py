@@ -210,7 +210,110 @@ class RTSPService:
         
         return new_rois # <-- Trả về danh sách các tuple (rect, name, roi_width, center_x, center_y)
 
-        
+    def qr_detection(self, frame_to_process: np.ndarray):
+        """
+        Phát hiện QR codes từ một frame được cung cấp và lưu vào database.
+        - Nếu QR name chưa có trong bảng qr_codes: insert vào qr_codes
+        - Nếu QR name đã có: insert vào bảng measurements
+
+        Args:
+            frame_to_process (np.ndarray): Frame ảnh cần xử lý.
+
+        Returns:
+            list: Một danh sách các tuple chứa thông tin (rect, name, roi_width, center_x, center_y) của các QR codes được phát hiện.
+        """
+        if frame_to_process is None:
+            logger.error("Đã nhận frame rỗng để xử lý QR.")
+            return []
+
+        logger.info("Đã vào hàm qr_detection_saveToDb")
+        frame_copy = frame_to_process.copy()
+
+        # Sử dụng zxingcpp để đọc barcodes
+        results = zxingcpp.read_barcodes(frame_copy)
+        qr_codes = []
+
+        for result in results:
+            if result.format != zxingcpp.BarcodeFormat.QRCode or not result.position:
+                continue
+
+            # Convert position to points with rounding
+            pts = [
+                (round(result.position.top_left.x), round(result.position.top_left.y)),
+                (round(result.position.top_right.x), round(result.position.top_right.y)),
+                (round(result.position.bottom_right.x), round(result.position.bottom_right.y)),
+                (round(result.position.bottom_left.x), round(result.position.bottom_left.y))
+            ]
+
+            qr_codes.append((result.text, pts))
+
+        # Mảng để lưu QR codes đã được phát hiện (tránh trùng lặp)
+        detected_qr_codes = []
+        new_rois = []
+
+        # Xử lý từng QR code được phát hiện
+        for text, points in qr_codes:
+            pts = np.array(points, dtype=np.int32)
+
+            # Tính toán điểm trung tâm
+            center_x = round(sum(pt[0] for pt in points) / 4)
+            center_y = round(sum(pt[1] for pt in points) / 4)
+
+            # Kiểm tra trùng lặp với ngưỡng 100px
+            is_duplicate = any(
+                abs(center_x - cx) < 100 and abs(center_y - cy) < 100
+                for cx, cy in detected_qr_codes
+            )
+
+            if not is_duplicate:
+                # Thêm vào danh sách QR đã phát hiện
+                detected_qr_codes.append((center_x, center_y))
+
+                # Tính toán tọa độ ROI với làm tròn
+                x_min = round(min(pt[0] for pt in points))
+                y_min = round(min(pt[1] for pt in points))
+                x_max = round(max(pt[0] for pt in points))
+                y_max = round(max(pt[1] for pt in points))
+
+                # Đảm bảo kích thước chẵn cho ROI
+                width = x_max - x_min
+                height = y_max - y_min
+                if width % 2 != 0:
+                    x_max += 1
+                if height % 2 != 0:
+                    y_max += 1
+
+                # Tính toán roi_width
+                roi_width = abs(x_max - x_min)
+
+                # Tạo ROI rectangle
+                rect = (x_min, y_min, x_max, y_max)
+                name = text or f"QR_{len(self.rois)}"
+
+                # ==================== LOGIC LƯU VÀO DATABASE ====================
+                print(f"\n🔍 Xử lý QR code: {name}")
+                print(f"   - Center: ({center_x}, {center_y})")
+                print(f"   - ROI: ({x_min}, {y_min}, {x_max}, {y_max})")
+                # Thêm thông tin đầy đủ vào danh sách với roi_width và center coordinates
+                new_rois.append((rect, name, roi_width, center_x, center_y))
+                print(f"center_x: {center_x}, center_y: {center_y}")
+
+                # Theo dõi vị trí laser và QR
+
+                # In ra thông tin QR code
+                print(f"QR Text: {text}")
+                print(f"  Center: (x={center_x}, y={center_y})")
+                print(f"  ROI rect: x_min={x_min}, y_min={y_min}, x_max={x_max}, y_max={y_max}")
+                print(f"  Name: {name}")
+                print("-" * 40)
+
+        # Thêm các ROI mới vào danh sách chính
+        # self.rois.extend(new_rois) # <-- Bỏ dòng này
+        print("New rois found: ", new_rois)
+
+        print(f"Tổng số QR codes phát hiện trong lần chạy này: {len(detected_qr_codes)}")
+
+        return new_rois  # <-- Trả về danh sách các tuple (rect, name, roi_width, center_x, center_y)
     def process_unit_conversion(self, rtsp_url: str, input_size_value: float):
         """
         Lấy frame từ RTSP, phát hiện QR codes và tính toán hệ số chuyển đổi.
@@ -231,7 +334,7 @@ class RTSPService:
             return None
         
         # 2. Phát hiện QR codes
-        detections = self.qr_detection_saveToDb(frame)
+        detections = self.qr_detection(frame)
         if not detections:
             print("Không phát hiện được QR code nào")
             return None
