@@ -96,10 +96,12 @@ class DatabaseService:
             
         try:
             cursor = self.connection.cursor()
+            current_time = datetime.now()
             cursor.execute(
-                "INSERT INTO qr_codes (name_roi, initial_x, initial_y) VALUES (%s, %s, %s)",
-                (name_roi, initial_x, initial_y)
+                "INSERT INTO qr_codes (name_roi, initial_x, initial_y, initial_time) VALUES (%s, %s, %s, %s)",
+                (name_roi, initial_x, initial_y, current_time)
             )
+            print(f"Kiểm tra thời gian innitial time qr_code: {current_time}")
             self.connection.commit()
             qr_code_id = cursor.lastrowid
             cursor.close()
@@ -110,6 +112,7 @@ class DatabaseService:
                 "name_roi": name_roi,
                 "initial_x": initial_x,
                 "initial_y": initial_y,
+                "initial_time": current_time
             }
         except Exception as e:
             print(f"❌ Lỗi khi tạo QR code: {e}")
@@ -137,6 +140,30 @@ class DatabaseService:
             return None
         except Exception as e:
             print(f"❌ Lỗi khi lấy QR code: {e}")
+            return None
+    
+    def get_qr_code_by_id(self, qr_code_id: int) -> Optional[Dict]:
+        """Lấy QR code theo ID"""
+        if not self.connection:
+            return None
+            
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM qr_codes WHERE qr_code_id = %s", (qr_code_id,))
+            row = cursor.fetchone()
+            cursor.close()
+            
+            if row:
+                return {
+                    "qr_code_id": row["qr_code_id"],
+                    "name_roi": row["name_roi"],
+                    "initial_x": row["initial_x"],
+                    "initial_y": row["initial_y"],
+                    "initial_time": row["initial_time"]
+                }
+            return None
+        except Exception as e:
+            print(f"❌ Lỗi khi lấy QR code theo ID: {e}")
             return None
     
     def get_all_qr_codes(self) -> List[Dict]:
@@ -171,20 +198,22 @@ class DatabaseService:
             
         try:
             cursor = self.connection.cursor()
+            current_time = datetime.now()
             cursor.execute(
-                "INSERT INTO measurements (x, y, qr_code_id) VALUES (%s, %s, %s)",
-                (x, y, qr_code_id)
+                "INSERT INTO measurements (x, y, qr_code_id, tracking_time) VALUES (%s, %s, %s, %s)",
+                (x, y, qr_code_id, current_time)
             )
             self.connection.commit()
             measurement_id = cursor.lastrowid
             cursor.close()
-            
+            print(f"Kiểm tra thời gian hiện tại measurement: {current_time}")
             print(f"✅ Đã tạo measurement: ({x}, {y})")
             return {
                 "measurement_id": measurement_id,
                 "x": x,
                 "y": y,
                 "qr_code_id": qr_code_id,
+                "tracking_time": current_time
             }
         except Exception as e:
             print(f"❌ Lỗi khi tạo measurement: {e}")
