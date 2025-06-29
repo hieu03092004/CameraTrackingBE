@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from api.index import router
 from contextlib import asynccontextmanager
-from task.task_services import camera_task_service
+from task.test_task import camera_task_service
 from fastapi.middleware.cors import CORSMiddleware
 
 @asynccontextmanager

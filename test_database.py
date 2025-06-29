@@ -107,12 +107,13 @@ def main():
         return
     
     # Test tạo bảng
-    #print(f"Tes{rtsp_service.check_roi_name_exists("ROI_Test_1")}")
-    print(f"Test:{database_service.get_active_schedules()}")
+    # print(f"Test:{rtsp_service.check_id_roi_exists(2)}")
+    #print(f"Test:{database_service.get_qr_code_by_id(1)}")
     # Test các thao tác cơ bản
  
     # qr_code_id = test_qr_code_operations()
-    # test_measurement_operations(qr_code_id)
+    # test_qr_code_operations()
+    # print(f"Test:{database_service.get_qr_code_by_id(1)}")
     
     # # Test lấy dữ liệu
     # test_data_retrieval()
