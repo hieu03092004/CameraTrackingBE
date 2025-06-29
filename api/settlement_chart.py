@@ -43,15 +43,15 @@ def get_settlement_chart(
 
             # Group by interval (hour/day/...)
             if interval == "hour":
-                group_format = "%Y-%m-%d %H:00:00"
+                group_format = "%%Y-%%m-%%d %%H:00:00"
             elif interval == "day":
-                group_format = "%Y-%m-%d 00:00:00"
+                group_format = "%%Y-%%m-%%d 00:00:00"
             elif interval == "month":
-                group_format = "%Y-%m-01 00:00:00"
+                group_format = "%%Y-%%m-01 00:00:00"
             elif interval == "year":
-                group_format = "%Y-01-01 00:00:00"
+                group_format = "%%Y-01-01 00:00:00"
             else:
-                group_format = "%Y-%m-%d %H:00:00"
+                group_format = "%%Y-%%m-%%d %%H:00:00"
 
             # Lấy measurements cho movable QR
             cursor.execute(f"""
@@ -83,12 +83,22 @@ def get_settlement_chart(
             # Tính toán độ lún tại từng time_point
             result = []
             for time_group in all_time_points:
-                ym = movable_data.get(time_group, ym0)  # Nếu thiếu thì lấy giá trị ban đầu
+                ym = movable_data.get(time_group, ym0)
                 yr = fixed_data.get(time_group, yr0)
-                lun = (ym - ym0) * Sb - (yr - yr0) * Sa
+
+                # Ép kiểu float để tránh lỗi Decimal * float
+                ym_f = float(ym)
+                yr_f = float(yr)
+                ym0_f = float(ym0)
+                yr0_f = float(yr0)
+
+                delta_ym = ym_f - ym0_f
+                delta_yr = yr_f - yr0_f
+                settlement = delta_ym * Sb - delta_yr * Sa
+
                 result.append({
                     "time": time_group,
-                    "settlement": lun
+                    "settlement": settlement
                 })
             return result
     except Exception as e:
